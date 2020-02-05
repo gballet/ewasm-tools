@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+if ARGV.length < 2
+	puts "usage: precomp num inputbyte1 ..."
+	exit -1
+end
+
+cmd = "go run"
+spacer = ""
+
+if $0 !~ /run/
+ cmd = "dlv debug"
+ spacer = "--"
+end
+
+input = ARGV[1..-1].map { |c| sprintf "%02x", c.to_i }.join
+inputsize = ARGV.length - 1
+immediatesize = inputsize.size / 8
+code ="#{sprintf "%02x", (0x60 - immediatesize + 1)}#{sprintf "%0#{2*immediatesize}x", inputsize}60006000376000600160#{sprintf "%0#{2*immediatesize}x", inputsize}600060ff60046006f100"
+
+puts code
+puts ARGV.length
+
+#system "go run ./cmd/evm/ --input #{code} disasm"
+system "#{cmd} ./cmd/evm/ #{spacer} --code=#{code} --prestate my_genesis.json --receiver a8c3eeb2915373139bcfc287d4ae9e660d734881 --input #{input} -json run"
